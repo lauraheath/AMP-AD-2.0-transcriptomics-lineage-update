@@ -30,8 +30,8 @@ RunMonocleTobit <- function(Dat, Labels, max_components=2, meth = 'DDRTree',C_by
   
   #HSMM <- reduceDimension(HSMM, max_components=max_components, reduction_method = meth, residualModelFormulaStr = ~pmi+educ)
   HSMM <- reduceDimension(HSMM, max_components=max_components, reduction_method = meth)
-  #HSMM <- orderCells(HSMM, reverse=TRUE)
-  HSMM <- orderCells(HSMM)
+  HSMM <- orderCells(HSMM, reverse=TRUE)
+  #HSMM <- orderCells(HSMM)
   if(is.null(C_by)){
     plot_cell_trajectory(HSMM, color_by="Labels")
   }
@@ -50,7 +50,7 @@ RunMonocleTobit <- function(Dat, Labels, max_components=2, meth = 'DDRTree',C_by
 
 
 
-#try residualized counts matrix (diagnosis-sex)
+#upload residualized counts matrix (diagnosis-sex)
 dlpfcCPMObj <- synapser::synGet('syn26967455')
 #Dat <- read.delim(dlpfcCPMObj$path)
 Dat <- readr::read_tsv(dlpfcCPMObj$path)
@@ -61,7 +61,50 @@ metadata <- read.csv(dlpfcCovObj$path,stringsAsFactors = F)
 #limit to DLPFC samples
 metadata <- dplyr::filter(metadata, tissue=='DLPFC')
 
-#load differential expression results (AD case vs control, by sex)
+length(unique(metadata$individualID))
+
+#which samples are in Dat?
+Names <- colnames(Dat)
+cNames <- metadata$specimenID
+l <- length(Names)
+#deleting specimenIDs not in the metadata
+temp <- rep(T,l)
+for (i in 1:l){
+  if (!(Names[i] %in% cNames)){
+    temp[i] <- F
+  }
+}
+In <- which(temp)
+#print(temp)
+Dat_temp <- Dat[,In]
+
+#limit metadata to the samples in Dat_temp
+Names <- Names[In]
+l <- length(cNames)
+temp <- rep(T,l)
+for (i in 1:l){
+  if (!(cNames[i] %in% Names)){
+    temp[i] <- F
+  }
+}
+In <- which(temp)
+metadata <- metadata[In,]
+length(unique(metadata$individualID))
+
+#There are duplicate individualIDs in this data (2 samples run on 14 individuals). Only want one sample per patient
+#look at the duplicate samples metadata
+n_occur <- data.frame(table(metadata$individualID))
+names(n_occur)[names(n_occur) == 'Var1'] <- 'individualID'
+metadata2 <- merge(metadata, n_occur)
+metadata2 <- subset(metadata2, metadata2$Freq==2)
+#three samples have same RIN (R1435458,R1498848,R1901673). look at other QC metrics
+#delete specimenIDs 41_120416, 1013-DLPFC,1060-DLPFC)
+#for samples with different RIN, keep the highest RIN 
+rownames(metadata) <- metadata$specimenID
+metadata3 <- metadata[!(row.names(metadata) %in% c('41_120416','1013-DLPFC', '1060-DLPFC','RISK_214','RISK_369','Sample_R2732138-DLPFC','RISK_218','RISK_390','205_120424','Sample_R6284240-PCC','Sample_R8292982-DLPFC','Sample_SM-49KVA','RISK_13','RISK_7_rerun')),]
+length(unique(metadata3$individualID))
+
+#load differential expression results (AD case vs control, by sex and tissue)
 de_file <- synapser::synGet('syn26967458')
 de1 <- read.delim(de_file$path)
 de_male <- dplyr::filter(de1,Comparison=='AD_male_DLPFC - CT_male_DLPFC')
@@ -86,13 +129,10 @@ InF <- which(de_female$adj.P.Val<0.1)
 FemaleGenes <- de_female[InF,]
 
 
-#Limit rnaseq matrix by DE genes, by sex
-GeneNames <- Dat2$hgnc_symbol
-GeneNamesMale <- MaleGenes$hgnc_symbol
-GeneNamesFemale <- FemaleGenes$hgnc_symbol
+
 
 Names <- colnames(Dat2)
-cNames <- metadata$specimenID
+cNames <- metadata3$specimenID
 l <- length(Names)
 
 #deleting columns not in the covariate list
@@ -107,56 +147,45 @@ In <- which(temp)
 #print(temp)
 Dat3 <- Dat2[,In]
 
-#deleting extra rows in covariate list
-Names <- Names[In]
-l <- length(cNames)
-temp <- rep(T,l)
-for (i in 1:l){
-  if (!(cNames[i] %in% Names)){
-    temp[i] <- F
-  }
-}
-In <- which(temp)
-metadata <- metadata[In,]
-
-# ColNorm <- function(Dat3){
-#   
-#   M = max(colSums(Dat3))
-#   l <- length(colnames(Dat3))
-#   
-#   for( i in 1:l){
-#     
-#     Dat3[,i] = Dat3[,i]*(M/sum(Dat3[,i]))
-#     
+# #deleting extra rows in covariate list
+# Names <- Names[In]
+# l <- length(cNames)
+# temp <- rep(T,l)
+# for (i in 1:l){
+#   if (!(cNames[i] %in% Names)){
+#     temp[i] <- F
 #   }
-#   
-#   return(Dat3)
 # }
+# In <- which(temp)
+# metadata4 <- metadata3[In,]
+
+
 
 #DatNorm <- ColNorm(Dat3)
 DatNorm <- Dat3
 
+#Limit rnaseq matrix by DE genes, by sex
+GeneNames <- Dat2$hgnc_symbol
+GeneNamesMale <- MaleGenes$hgnc_symbol
+GeneNamesFemale <- FemaleGenes$hgnc_symbol
 
 #male dataset
-In_S <- which(metadata$sex == 'male')
+In_S <- which(metadata3$sex == 'male')
 DatNorm_male <- DatNorm[,In_S]
 #save matrix and metadata for DE statistics:
 saveRDS(DatNorm_male, file="~/prot-lineage/data_objects/Male_fulldatamatrix.RDS")
-metadata_male <- metadata[In_S,]
+metadata_male <- metadata3[In_S,]
 In_genes <- which(GeneNames %in% GeneNamesMale)
 DatNorm_male <- DatNorm_male[In_genes,]
-GeneNamesMale <- GeneNames[In_genes]
-
 
 
 #female dataset
-In_S <- which(metadata$sex == 'female')
+In_S <- which(metadata3$sex == 'female')
 DatNorm_female <- DatNorm[,In_S]
 saveRDS(DatNorm_female, file="~/prot-lineage/data_objects/Female_fulldatamatrix.RDS")
-metadata_female <- metadata[In_S,]
+metadata_female <- metadata3[In_S,]
 In_genes <- which(GeneNames %in% GeneNamesFemale)
 DatNorm_female <- DatNorm_female[In_genes,]
-GeneNamesFemale <- GeneNames[In_genes]
 
 
 
@@ -186,7 +215,7 @@ write.csv(rnaseq_genesF, file="~/prot-lineage/data_objects/rnaseq_genesF.csv", r
 
 
 #Run Monocle2: (ignore warning messages that occur)
-#male rnaseq dataset needs to be run with order Reversed (HSMM <- orderCells(HSMM, reverse=TRUE)
+#female rnaseq dataset needs to be run with order Reversed (HSMM <- orderCells(HSMM, reverse=TRUE)
 MonRun <- RunMonocleTobit(temp, temp2, C_by = 'Pseudotime',gene_short_name = gene_short_name)
 g<- plot_cell_trajectory(MonRun,color_by = "diagnosis",show_branch_points=F,use_color_gradient = F,cell_size = 1)
 g <- g + ggplot2::scale_color_viridis_d()
@@ -204,23 +233,28 @@ plot_cell_trajectory(MonRun,color_by = "RIN",show_branch_points=F,use_color_grad
 plot_cell_trajectory(MonRun,color_by = "pmi",show_branch_points=F,use_color_gradient = F,cell_size = 1)
 table(MonRun$State)
 
-
+plot_cell_trajectory(MonRun,color_by = "State",show_branch_points=F,use_color_gradient = F,cell_size = 1)
 #male samples
 MonRun$State2 <- MonRun$State
-MonRun$State2[MonRun$State == 3] <- 2
-MonRun$State2[MonRun$State == 4] <- 3
-MonRun$State2[MonRun$State == 5] <- 3
-MonRun$State2[MonRun$State == 6] <- 5
-MonRun$State2[MonRun$State == 7] <- 4
+MonRun$State2[MonRun$State == 9] <- 2
+MonRun$State2[MonRun$State == 8] <- 4
+MonRun$State2[MonRun$State == 7] <- 5
+
 
 #female samples
 MonRun$State2 <- MonRun$State
-MonRun$State2[MonRun$State == 7] <- 2
-MonRun$State2[MonRun$State == 2] <- 3
 MonRun$State2[MonRun$State == 4] <- 3
-MonRun$State2[MonRun$State == 3] <- 4
+MonRun$State2[MonRun$State == 5] <- 4
 MonRun$State2[MonRun$State == 6] <- 5
-MonRun$State2[MonRun$State == 5] <- 6
+MonRun$State2[MonRun$State == 7] <- 5
+MonRun$State2[MonRun$State == 8] <- 6
+MonRun$State2[MonRun$State == 13] <- 7
+MonRun$State2[MonRun$State == 10] <- 8
+MonRun$State2[MonRun$State == 11] <- 8
+MonRun$State2[MonRun$State == 12] <- 9
+
+
+plot_cell_trajectory(MonRun,color_by = "State2",show_branch_points=F,use_color_gradient = F,cell_size = 1)
 
 MonRun$State2 <- as.numeric(MonRun$State2)
 MonRun$State2 <- as.factor(MonRun$State2)
@@ -355,9 +389,9 @@ write.csv(pseudo, file="~/prot-lineage/data_objects/female_pseudotimes_states.cs
 file <- synapser::File(path='~/prot-lineage/data_objects/female_pseudotimes_states.csv', parentId='syn38349639')
 file <- synapser::synStore(file)
 
-#write.csv(pseudo, file="~/prot-lineage/data_objects/male_pseudotimes_state.csv", row.names=FALSE)
-#file <- synapser::File(path='~/prot-lineage/data_objects/male_pseudotimes_state.csv', parentId='syn38349639')
-#file <- synapser::synStore(file)
+write.csv(pseudo, file="~/prot-lineage/data_objects/male_pseudotimes_state.csv", row.names=FALSE)
+file <- synapser::File(path='~/prot-lineage/data_objects/male_pseudotimes_state.csv', parentId='syn38349639')
+file <- synapser::synStore(file)
 
 
 #run logistic regression comparing pseudotime between cases and controls only
@@ -370,8 +404,8 @@ tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_bargraph_diagnosis.tiff',height=
 #tiff(file='~/prot-lineage/rnaseq_figures/MALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
 
 g <- ggplot(casecontrol,aes(x=diagnosis,
-                             y=pseudotime_sc,
-                             color=diagnosis)) + geom_boxplot()
+                            y=pseudotime_sc,
+                            color=diagnosis)) + geom_boxplot()
 g <- g + ggplot2::geom_boxplot() + theme(text = element_text(size = 22)) + theme(legend.position = "none")
 g <- g + ggplot2::geom_point(size=2.5, position=ggplot2::position_jitterdodge())
 g <- g + ggplot2::scale_color_manual(values=viridis::viridis(3)[1:2])
@@ -465,16 +499,16 @@ ad_gwas <- c("CR1",
              "WDR18",
              "CASS4")
 
-Dat3 <- Dat2
-Dat3$gene_names <- rownames(Dat3)
-Dat3$gene_short_name <- gsub("\\|.*", "", Dat3$gene_names)
+#Dat3 <- readRDS(file='~/prot-lineage/data_objects/Male_fulldatamatrix.RDS')
+Dat3 <- readRDS(file='~/prot-lineage/data_objects/Female_fulldatamatrix.RDS')
 
 
 # dlpfcCPMObj <- synapser::synGet('syn8456638')
 # Dat <- data.table::fread(dlpfcCPMObj$path,data.table=F)
-sampleIds <- colnames(Dat2)#[-120]
+sampleIds <- colnames(Dat3)#[-120]
 #sampleIds <- sampleIds[-120]
 sampleIds
+Dat3$gene_short_name <- rownames(Dat3)
 geneIds <- Dat3$gene_short_name
 Dat3$gene_short_name<-NULL
 Dat3$gene_names<-NULL
@@ -482,8 +516,8 @@ Dat3 <- t(Dat3)
 colnames(Dat3) <- geneIds
 Dat3 <- data.frame(Dat3,stringsAsFactors=F)
 Dat3$sampleId <- sampleIds
-dlpfc <- dplyr::left_join(Fvariables,Dat3,by=c('SampleID'='sampleId'))
-dlpfc2 <- dlpfc[,14:1850]
+dlpfc <- dplyr::left_join(pseudo,Dat3,by=c('SampleID'='sampleId'))
+dlpfc2 <- dlpfc[,16:18874]
 
 corvec <- cor(dlpfc2,dlpfc$Pseudotime,method='spearman')
 corDfdlpfc <- data.frame(geneid=colnames(dlpfc2),cor=corvec,stringsAsFactors=F)
@@ -503,8 +537,8 @@ corDfdlpfc$adGwas <- corDfdlpfc$geneid %in% ad_gwas
 colnames(corDfdlpfc)[3] <- 'LOADGWASGene'
 corDfdlpfc$LOADGWASGene2 <- ifelse(corDfdlpfc$LOADGWASGene==FALSE, "NOT GWAS GENE", "GWAS GENE")
 
-#tiff(file='~/prot-lineage/figures/FEMALE_loadgwas_cor.tiff',height=85,width=100,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_loadgwas_cor.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='~/prot-lineage/figures/FEMALE_loadgwas_cor.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='~/prot-lineage/figures/MALE_loadgwas_cor.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(corDfdlpfc,ggplot2::aes(x=LOADGWASGene2,y=cor,fill=LOADGWASGene2))
 g <- g + ggplot2::geom_boxplot() + theme(legend.position="none")
 g <- g + ggplot2::scale_fill_viridis_d()
