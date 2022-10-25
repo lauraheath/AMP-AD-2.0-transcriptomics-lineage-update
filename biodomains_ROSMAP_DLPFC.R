@@ -36,21 +36,17 @@ bd.tally <- function( enrVct, biodomDefTbl){
 
 # data: biodomain definitions, biodomain plotting colors, and braak state-gene table
 biodom <- readRDS( synapser::synGet('syn25428992')$path  )
-
-
-biodom.annotated <- biodom %>% filter(!is.na(n_symbol)) %>% pull(symbol, name=GOterm_Name)
+biodom.annotated <- biodom %>% filter(!is.na(n_hgncSymbol)) %>% pull(hgnc_symbol, name=GOterm_Name)
 dom.cols <- read_csv( synGet('syn26856828')$path )
 
 #female degs by state
 pt_data <- read_csv( synGet('syn39989123')$path )
-pt_data <- read_csv(file="~/prot-lineage/data_objects/female_DEanova_statsALLGENES.csv")
+#pt_data <- read_csv(file="female_DEanova_statsALLGENES.csv")
+#OR
 #male degs by state
 pt_data <- read_csv( synGet('syn39990047')$path )
-pt_data <- read_csv(file="~/prot-lineage/data_objects/male_DEanova_statsALLGENES.csv")
+#pt_data <- read_csv(file="male_DEanova_statsALLGENES.csv")
 
-
-#pt_data <- read.csv(file="~/prot-lineage/data_objects/female_DEanova_stats.csv")
-#pt_data <- read.csv(file="~/prot-lineage/data_objects/male_DEanova_stats.csv")
 
 # Run enrichments by pseudotime state -------------------------------------
 
@@ -86,8 +82,8 @@ enr <- enr %>%
 
 # plot! -------------------------------------------------------------------
 
-#tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_bidomains.tiff',height=200,width=200,units='mm',res=300)
-#tiff(file='~/prot-lineage/rnaseq_figures/MALE_biodomains.tiff',height=200,width=200,units='mm',res=300)
+#tiff(file='FEMALE_bidomains.tiff',height=200,width=200,units='mm',res=300)
+tiff(file='MALE_biodomains.tiff',height=200,width=200,units='mm',res=300)
 
 enr %>%   
   ggplot(aes( factor(state), NES ))+ 
@@ -125,11 +121,11 @@ dev.off()
 
 enr$leadingEdge <- as.character(enr$leadingEdge)
 
-write.csv(enr, file="~/prot-lineage/data_objects/F_GOenrichment.csv", row.names=FALSE)
-file <- synapser::File(path='~/prot-lineage/data_objects/F_GOenrichment.csv', parentId='syn38349639')
+write.csv(enr, file="F_GOenrichment.csv", row.names=FALSE)
+file <- synapser::File(path='F_GOenrichment.csv', parentId='syn38349639')
 file <- synapser::synStore(file)
 
-file <- synapser::File(path='~/prot-lineage/rnaseq_figures/FEMALE_bidomains.tiff', parentId='syn38347670')
+file <- synapser::File(path='FEMALE_bidomains.tiff', parentId='syn38347670')
 file <- synapser::synStore(file)
 
 

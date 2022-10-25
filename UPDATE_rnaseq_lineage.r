@@ -1,3 +1,5 @@
+setwd("~/AMP-AD-2.0-transcriptomics-lineage-update/")
+
 ### RERUN TRANSCRIPTOMIC PSEUDOTIME ANALYSIS WITH UPDATED AMP-AD 2.0 DATA. USE RNASEQ HARMONIZATION PROJECT COUNTS AND DE GENES
 
 #function to run monocle analysis
@@ -173,7 +175,7 @@ GeneNamesFemale <- FemaleGenes$hgnc_symbol
 In_S <- which(metadata3$sex == 'male')
 DatNorm_male <- DatNorm[,In_S]
 #save matrix and metadata for DE statistics:
-saveRDS(DatNorm_male, file="~/prot-lineage/data_objects/Male_fulldatamatrix.RDS")
+saveRDS(DatNorm_male, file="Male_fulldatamatrix.RDS")
 metadata_male <- metadata3[In_S,]
 In_genes <- which(GeneNames %in% GeneNamesMale)
 DatNorm_male <- DatNorm_male[In_genes,]
@@ -182,7 +184,7 @@ DatNorm_male <- DatNorm_male[In_genes,]
 #female dataset
 In_S <- which(metadata3$sex == 'female')
 DatNorm_female <- DatNorm[,In_S]
-saveRDS(DatNorm_female, file="~/prot-lineage/data_objects/Female_fulldatamatrix.RDS")
+saveRDS(DatNorm_female, file="Female_fulldatamatrix.RDS")
 metadata_female <- metadata3[In_S,]
 In_genes <- which(GeneNames %in% GeneNamesFemale)
 DatNorm_female <- DatNorm_female[In_genes,]
@@ -199,7 +201,7 @@ rownames(temp2)<-NULL
 gene_short_name <- rownames(DatNorm_male)
 #save gene list for later use:
 rnaseq_genesM <- as.data.frame(gene_short_name)
-write.csv(rnaseq_genesM, file="~/prot-lineage/data_objects/rnaseq_genesM.csv", row.names=FALSE)
+write.csv(rnaseq_genesM, file="rnaseq_genesM.csv", row.names=FALSE)
 
 
 #females
@@ -210,7 +212,7 @@ rownames(temp2)<-NULL
 gene_short_name <- rownames(DatNorm_female)
 #save gene list for later use:
 rnaseq_genesF <- as.data.frame(gene_short_name)
-write.csv(rnaseq_genesF, file="~/prot-lineage/data_objects/rnaseq_genesF.csv", row.names=FALSE)
+write.csv(rnaseq_genesF, file="rnaseq_genesF.csv", row.names=FALSE)
 
 
 
@@ -261,63 +263,29 @@ MonRun$State2 <- as.factor(MonRun$State2)
 table(MonRun$State2)
 
 #save Monocle object for later
-saveRDS(MonRun, file='~/prot-lineage/data_objects/MonRun_female.RDS')
-saveRDS(MonRun, file='~/prot-lineage/data_objects/MonRun_male.RDS')
+saveRDS(MonRun, file='MonRun_female.RDS')
+saveRDS(MonRun, file='MonRun_male.RDS')
 
-tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='~/prot-lineage/rnaseq_figures/MALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='FEMALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='/MALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
 g<- plot_cell_trajectory(MonRun,color_by = "State2",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
 g <- g + ggplot2::scale_color_viridis_d()
 g <- g + ggplot2::labs(color="State")
 g
 dev.off()
 
-tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='~/prot-lineage/rnaseq_figures/MALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='FEMALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='MALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
 g<- plot_cell_trajectory(MonRun,color_by = "diagnosis",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
 g <- g + ggplot2::scale_color_viridis_d()
 g <- g + ggplot2::labs(color="Diagnosis")
 g
 dev.off()
 
-# #tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_tree_braak.tiff',height=85,width=100,units='mm',res=300)
-# tiff(file='~/prot-lineage/rnaseq_figures/MALE_tree_braak.tiff',height=85,width=100,units='mm',res=300)
-# g<- plot_cell_trajectory(MonRun,color_by = "braaksc",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
-# g <- g + ggplot2::scale_color_viridis_d()
-# g <- g + ggplot2::labs(color="Braak Score")
-# g
-# dev.off()
-# 
-# #MonRun$APOE <- factor(MonRun$APOE,levels=c(0,1,2))
-# MonRun$apoe_genotype <- as.character(MonRun$apoe_genotype)
-# #tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_tree_apoe.tiff',height=85,width=100,units='mm',res=300)
-# tiff(file='~/prot-lineage/rnaseq_figures/figures/MALE_tree_apoe.tiff',height=85,width=100,units='mm',res=300)
-# g<- plot_cell_trajectory(MonRun,color_by = "apoe_genotype",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
-# g <- g + ggplot2::scale_color_viridis_d()
-# g <- g + ggplot2::labs(color="APOE genotype")
-# g
-# dev.off()
-# 
-# 
-# #tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_tree_cerad.tiff',height=85,width=100,units='mm',res=300)
-# tiff(file='~/prot-lineage/rnaseq_figures/figures/MALE_tree_cerad.tiff',height=85,width=100,units='mm',res=300)
-# g<- plot_cell_trajectory(MonRun,color_by = "ceradsc",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
-# g <- g + ggplot2::scale_color_viridis_d()
-# g <- g + ggplot2::labs(color="CERAD Score")
-# g
-# dev.off()
-# 
-# #tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_tree_cogdx.tiff',height=85,width=100,units='mm',res=300)
-# tiff(file='~/prot-lineage/rnaseq_figures/figures/MALE_tree_cogdx.tiff',height=85,width=100,units='mm',res=300)
-# g<- plot_cell_trajectory(MonRun,color_by = "cogdx",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
-# g <- g + ggplot2::scale_color_viridis_d()
-# g <- g + ggplot2::labs(color="Cognitive Diagnosis")
-# g
-# dev.off()
 
 MonRun$braaksc <- as.factor(MonRun$braaksc)
-tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='~/prot-lineage/rnaseq_figures/MALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='FEMALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='MALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(MonRun@phenoData@data, aes(x=braaksc, y=scale(Pseudotime,center=F),fill=braaksc)) 
 g <- g + ggplot2::geom_boxplot()
 g <- g + ggplot2::stat_summary(fun.y=mean, geom="point", shape=23, size=2)
@@ -330,8 +298,8 @@ dev.off()
 
 MonRun$ceradsc <- as.factor(MonRun$ceradsc)
 MonRun$ceradsc <- fct_rev(MonRun$cerads)
-tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='~/prot-lineage/rnaseq_figures/MALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='FEMALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='MALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(MonRun@phenoData@data, aes(x=ceradsc, y=scale(Pseudotime,center=F),fill=ceradsc)) 
 g <- g + ggplot2::geom_boxplot()
 g <- g + ggplot2::stat_summary(fun.y=mean, geom="point", shape=23, size=2)
@@ -343,8 +311,8 @@ g
 dev.off()
 
 MonRun$cogdx <- as.factor(MonRun$cogdx)
-tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='~/prot-lineage/rnaseq_figures/MALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='FEMALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='MALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(MonRun@phenoData@data, aes(x=cogdx, y=scale(Pseudotime,center=F),fill=cogdx)) 
 g <- g + ggplot2::geom_boxplot()
 g <- g + ggplot2::stat_summary(fun.y=mean, geom="point", shape=23, size=2)
@@ -385,12 +353,12 @@ pseudo <- as.data.frame(x)
 pseudo$pseudotime_sc <- scale(pseudo$Pseudotime, center=F)
 
 #save variables file for later
-write.csv(pseudo, file="~/prot-lineage/data_objects/female_pseudotimes_states.csv", row.names=FALSE)
-file <- synapser::File(path='~/prot-lineage/data_objects/female_pseudotimes_states.csv', parentId='syn38349639')
+write.csv(pseudo, file="female_pseudotimes_states.csv", row.names=FALSE)
+file <- synapser::File(path='female_pseudotimes_states.csv', parentId='syn38349639')
 file <- synapser::synStore(file)
 
-write.csv(pseudo, file="~/prot-lineage/data_objects/male_pseudotimes_state.csv", row.names=FALSE)
-file <- synapser::File(path='~/prot-lineage/data_objects/male_pseudotimes_state.csv', parentId='syn38349639')
+write.csv(pseudo, file="male_pseudotimes_state.csv", row.names=FALSE)
+file <- synapser::File(path='male_pseudotimes_state.csv', parentId='syn38349639')
 file <- synapser::synStore(file)
 
 
@@ -400,8 +368,8 @@ casecontrol$diag2 <- ifelse(casecontrol$diagnosis=='AD', 1, 0)
 
 summary(glm(diag2 ~ pseudotime_sc,casecontrol,family='binomial'))
 
-tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
-#tiff(file='~/prot-lineage/rnaseq_figures/MALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
+tiff(file='FEMALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
+#tiff(file='MALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
 
 g <- ggplot(casecontrol,aes(x=diagnosis,
                             y=pseudotime_sc,
@@ -499,15 +467,11 @@ ad_gwas <- c("CR1",
              "WDR18",
              "CASS4")
 
-#Dat3 <- readRDS(file='~/prot-lineage/data_objects/Male_fulldatamatrix.RDS')
-Dat3 <- readRDS(file='~/prot-lineage/data_objects/Female_fulldatamatrix.RDS')
+#Dat3 <- readRDS(file='Male_fulldatamatrix.RDS')
+Dat3 <- readRDS(file='Female_fulldatamatrix.RDS')
 
-
-# dlpfcCPMObj <- synapser::synGet('syn8456638')
-# Dat <- data.table::fread(dlpfcCPMObj$path,data.table=F)
-sampleIds <- colnames(Dat3)#[-120]
-#sampleIds <- sampleIds[-120]
-sampleIds
+sampleIds <- colnames(Dat3)
+#sampleIds
 Dat3$gene_short_name <- rownames(Dat3)
 geneIds <- Dat3$gene_short_name
 Dat3$gene_short_name<-NULL
@@ -537,8 +501,8 @@ corDfdlpfc$adGwas <- corDfdlpfc$geneid %in% ad_gwas
 colnames(corDfdlpfc)[3] <- 'LOADGWASGene'
 corDfdlpfc$LOADGWASGene2 <- ifelse(corDfdlpfc$LOADGWASGene==FALSE, "NOT GWAS GENE", "GWAS GENE")
 
-tiff(file='~/prot-lineage/figures/FEMALE_loadgwas_cor.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='~/prot-lineage/figures/MALE_loadgwas_cor.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='FEMALE_loadgwas_cor.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='MALE_loadgwas_cor.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(corDfdlpfc,ggplot2::aes(x=LOADGWASGene2,y=cor,fill=LOADGWASGene2))
 g <- g + ggplot2::geom_boxplot() + theme(legend.position="none")
 g <- g + ggplot2::scale_fill_viridis_d()
