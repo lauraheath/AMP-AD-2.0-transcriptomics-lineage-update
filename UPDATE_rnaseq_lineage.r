@@ -106,6 +106,13 @@ rownames(metadata) <- metadata$specimenID
 metadata3 <- metadata[!(row.names(metadata) %in% c('41_120416','1013-DLPFC', '1060-DLPFC','RISK_214','RISK_369','Sample_R2732138-DLPFC','RISK_218','RISK_390','205_120424','Sample_R6284240-PCC','Sample_R8292982-DLPFC','Sample_SM-49KVA','RISK_13','RISK_7_rerun')),]
 length(unique(metadata3$individualID))
 
+#want to add projid to the data frame: upload original clinical metadata
+RMclin <- synapser::synGet('syn3191087')
+RMclin <- read.csv(RMclin$path,stringsAsFactors = F)
+RMclin <- subset(RMclin, select=c(individualID, projid))
+metadata3 <- dplyr::left_join(metadata3, RMclin)
+metadata3 <- metadata3 %>% relocate(projid, .before = specimenID)
+
 #load differential expression results (AD case vs control, by sex and tissue)
 de_file <- synapser::synGet('syn26967458')
 de1 <- read.delim(de_file$path)
@@ -263,8 +270,8 @@ MonRun$State2 <- as.factor(MonRun$State2)
 table(MonRun$State2)
 
 #save Monocle object for later
-saveRDS(MonRun, file='MonRun_female.RDS')
-saveRDS(MonRun, file='MonRun_male.RDS')
+saveRDS(MonRun, file='data_objects/MonRun_RNAseq_female.RDS')
+saveRDS(MonRun, file='data_objects/MonRun_RNAseq_male.RDS')
 
 tiff(file='FEMALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
 #tiff(file='/MALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
@@ -333,6 +340,7 @@ x <- list()
 x$msex <- MonRun$sex
 x$SampleID <- MonRun$specimenID
 x$individualID <- MonRun$individualID
+x$projid <- MonRun$projid
 x$tissue <- MonRun$tissue
 x$State <- MonRun$State2
 x$Pseudotime <- MonRun$Pseudotime
