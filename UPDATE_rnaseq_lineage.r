@@ -132,9 +132,9 @@ Dat2 <- as.data.frame(Dat2)
 rownames(Dat2) <- Dat2$hgnc_symbol
 
 #subset genes by sex
-InM <- which(de_male$adj.P.Val<0.1)
+InM <- which(de_male$adj.P.Val<0.05)
 MaleGenes <- de_male[InM,]
-InF <- which(de_female$adj.P.Val<0.1)
+InF <- which(de_female$adj.P.Val<0.05)
 FemaleGenes <- de_female[InF,]
 
 
@@ -182,7 +182,7 @@ GeneNamesFemale <- FemaleGenes$hgnc_symbol
 In_S <- which(metadata3$sex == 'male')
 DatNorm_male <- DatNorm[,In_S]
 #save matrix and metadata for DE statistics:
-saveRDS(DatNorm_male, file="Male_fulldatamatrix.RDS")
+saveRDS(DatNorm_male, file="data_objects/Male_fulldatamatrix.RDS")
 metadata_male <- metadata3[In_S,]
 In_genes <- which(GeneNames %in% GeneNamesMale)
 DatNorm_male <- DatNorm_male[In_genes,]
@@ -191,7 +191,7 @@ DatNorm_male <- DatNorm_male[In_genes,]
 #female dataset
 In_S <- which(metadata3$sex == 'female')
 DatNorm_female <- DatNorm[,In_S]
-saveRDS(DatNorm_female, file="Female_fulldatamatrix.RDS")
+saveRDS(DatNorm_female, file="data_objects/Female_fulldatamatrix.RDS")
 metadata_female <- metadata3[In_S,]
 In_genes <- which(GeneNames %in% GeneNamesFemale)
 DatNorm_female <- DatNorm_female[In_genes,]
@@ -208,7 +208,7 @@ rownames(temp2)<-NULL
 gene_short_name <- rownames(DatNorm_male)
 #save gene list for later use:
 rnaseq_genesM <- as.data.frame(gene_short_name)
-write.csv(rnaseq_genesM, file="rnaseq_genesM.csv", row.names=FALSE)
+write.csv(rnaseq_genesM, file="data_objects/rnaseq_genesM.csv", row.names=FALSE)
 
 
 #females
@@ -219,12 +219,12 @@ rownames(temp2)<-NULL
 gene_short_name <- rownames(DatNorm_female)
 #save gene list for later use:
 rnaseq_genesF <- as.data.frame(gene_short_name)
-write.csv(rnaseq_genesF, file="rnaseq_genesF.csv", row.names=FALSE)
+write.csv(rnaseq_genesF, file="data_objects/rnaseq_genesF.csv", row.names=FALSE)
 
 
 
 #Run Monocle2: (ignore warning messages that occur)
-#female rnaseq dataset needs to be run with order Reversed (HSMM <- orderCells(HSMM, reverse=TRUE)
+#male rnaseq dataset needs to be run with order Reversed (HSMM <- orderCells(HSMM, reverse=TRUE)
 MonRun <- RunMonocleTobit(temp, temp2, C_by = 'Pseudotime',gene_short_name = gene_short_name)
 g<- plot_cell_trajectory(MonRun,color_by = "diagnosis",show_branch_points=F,use_color_gradient = F,cell_size = 1)
 g <- g + ggplot2::scale_color_viridis_d()
@@ -243,25 +243,30 @@ plot_cell_trajectory(MonRun,color_by = "pmi",show_branch_points=F,use_color_grad
 table(MonRun$State)
 
 plot_cell_trajectory(MonRun,color_by = "State",show_branch_points=F,use_color_gradient = F,cell_size = 1)
+table(MonRun$State)
 #male samples
 MonRun$State2 <- MonRun$State
-MonRun$State2[MonRun$State == 9] <- 2
-MonRun$State2[MonRun$State == 8] <- 4
-MonRun$State2[MonRun$State == 7] <- 5
+MonRun$State2[MonRun$State == 3] <- 2
+MonRun$State2[MonRun$State == 4] <- 3
+MonRun$State2[MonRun$State == 9] <- 4
+MonRun$State2[MonRun$State == 5] <- 5
+MonRun$State2[MonRun$State == 6] <- 5
+MonRun$State2[MonRun$State == 8] <- 5
+MonRun$State2[MonRun$State == 7] <- 6
 
 
 #female samples
 MonRun$State2 <- MonRun$State
-MonRun$State2[MonRun$State == 4] <- 3
-MonRun$State2[MonRun$State == 5] <- 4
-MonRun$State2[MonRun$State == 6] <- 5
-MonRun$State2[MonRun$State == 7] <- 5
+MonRun$State2[MonRun$State == 11] <- 2
+MonRun$State2[MonRun$State == 2] <- 2
+MonRun$State2[MonRun$State == 10] <- 3
+MonRun$State2[MonRun$State == 3] <- 4
+MonRun$State2[MonRun$State == 9] <- 4
+MonRun$State2[MonRun$State == 4] <- 4
+MonRun$State2[MonRun$State == 5] <- 5
+MonRun$State2[MonRun$State == 6] <- 6
 MonRun$State2[MonRun$State == 8] <- 6
-MonRun$State2[MonRun$State == 13] <- 7
-MonRun$State2[MonRun$State == 10] <- 8
-MonRun$State2[MonRun$State == 11] <- 8
-MonRun$State2[MonRun$State == 12] <- 9
-
+MonRun$State2[MonRun$State == 7] <- 7
 
 plot_cell_trajectory(MonRun,color_by = "State2",show_branch_points=F,use_color_gradient = F,cell_size = 1)
 
@@ -273,16 +278,16 @@ table(MonRun$State2)
 saveRDS(MonRun, file='data_objects/MonRun_RNAseq_female.RDS')
 saveRDS(MonRun, file='data_objects/MonRun_RNAseq_male.RDS')
 
-tiff(file='FEMALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='/MALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='figures/FEMALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='figures/MALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
 g<- plot_cell_trajectory(MonRun,color_by = "State2",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
 g <- g + ggplot2::scale_color_viridis_d()
 g <- g + ggplot2::labs(color="State")
 g
 dev.off()
 
-tiff(file='FEMALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='MALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='figures/FEMALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='figures/MALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
 g<- plot_cell_trajectory(MonRun,color_by = "diagnosis",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
 g <- g + ggplot2::scale_color_viridis_d()
 g <- g + ggplot2::labs(color="Diagnosis")
@@ -291,8 +296,8 @@ dev.off()
 
 
 MonRun$braaksc <- as.factor(MonRun$braaksc)
-tiff(file='FEMALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='MALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='figures/FEMALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='figures/MALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(MonRun@phenoData@data, aes(x=braaksc, y=scale(Pseudotime,center=F),fill=braaksc)) 
 g <- g + ggplot2::geom_boxplot()
 g <- g + ggplot2::stat_summary(fun.y=mean, geom="point", shape=23, size=2)
@@ -305,8 +310,8 @@ dev.off()
 
 MonRun$ceradsc <- as.factor(MonRun$ceradsc)
 MonRun$ceradsc <- fct_rev(MonRun$cerads)
-tiff(file='FEMALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='MALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='figures/FEMALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='figures/MALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(MonRun@phenoData@data, aes(x=ceradsc, y=scale(Pseudotime,center=F),fill=ceradsc)) 
 g <- g + ggplot2::geom_boxplot()
 g <- g + ggplot2::stat_summary(fun.y=mean, geom="point", shape=23, size=2)
@@ -318,8 +323,8 @@ g
 dev.off()
 
 MonRun$cogdx <- as.factor(MonRun$cogdx)
-tiff(file='FEMALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
-#tiff(file='MALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='figures/FEMALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='figures/MALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(MonRun@phenoData@data, aes(x=cogdx, y=scale(Pseudotime,center=F),fill=cogdx)) 
 g <- g + ggplot2::geom_boxplot()
 g <- g + ggplot2::stat_summary(fun.y=mean, geom="point", shape=23, size=2)
@@ -361,12 +366,12 @@ pseudo <- as.data.frame(x)
 pseudo$pseudotime_sc <- scale(pseudo$Pseudotime, center=F)
 
 #save variables file for later
-write.csv(pseudo, file="female_pseudotimes_states.csv", row.names=FALSE)
-file <- synapser::File(path='female_pseudotimes_states.csv', parentId='syn38349639')
+write.csv(pseudo, file="data_objects/female_pseudotimes_states.csv", row.names=FALSE)
+file <- synapser::File(path='data_objects/female_pseudotimes_states.csv', parentId='syn38349639')
 file <- synapser::synStore(file)
 
-write.csv(pseudo, file="male_pseudotimes_state.csv", row.names=FALSE)
-file <- synapser::File(path='male_pseudotimes_state.csv', parentId='syn38349639')
+write.csv(pseudo, file="data_objects/male_pseudotimes_state.csv", row.names=FALSE)
+file <- synapser::File(path='data_objects/male_pseudotimes_state.csv', parentId='syn38349639')
 file <- synapser::synStore(file)
 
 
@@ -376,8 +381,8 @@ casecontrol$diag2 <- ifelse(casecontrol$diagnosis=='AD', 1, 0)
 
 summary(glm(diag2 ~ pseudotime_sc,casecontrol,family='binomial'))
 
-tiff(file='FEMALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
-#tiff(file='MALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
+#tiff(file='data_objects/FEMALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
+tiff(file='MALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
 
 g <- ggplot(casecontrol,aes(x=diagnosis,
                             y=pseudotime_sc,
