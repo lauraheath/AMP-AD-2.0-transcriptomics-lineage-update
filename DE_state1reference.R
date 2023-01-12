@@ -1,14 +1,14 @@
 ######### branch-specific differential expression analysis
 
 #need Monrun object from prot_lineage_monocle_rerun.R and gene_short_name vector
-#script for males following script for females (5 states in males, 6 in females)
+#script for males following script for females (6 states in males, 7 in females)
 #upload entire matrix first to look at associations with ALL genes, not just DE genes included for trajectory model
 
-MonRun <- readRDS(file="~/prot-lineage/data_objects/MonRun_female.RDS")
-temp <- readRDS(file="~/prot-lineage/data_objects/Female_fulldatamatrix.RDS")
+MonRun <- readRDS(file="data_objects/MonRun_RNAseq_female.RDS")
+temp <- readRDS(file="data_objects/Female_fulldatamatrix.RDS")
 gene_short_name <- rownames(temp)
 table(MonRun$State2)
-#there are 9 states in the female tree
+#there are 7 states in the female tree
 #pre-process data for ANOVA test
 l2 <- list()
 l2$gene_names <- gene_short_name
@@ -18,8 +18,6 @@ l2$p_4 <- rep(0,length(gene_short_name))
 l2$p_5 <- rep(0,length(gene_short_name))
 l2$p_6 <- rep(0,length(gene_short_name))
 l2$p_7 <- rep(0,length(gene_short_name))
-l2$p_8 <- rep(0,length(gene_short_name))
-l2$p_9 <- rep(0,length(gene_short_name))
 
 l2$d_2 <- rep(0,length(gene_short_name))
 l2$d_3 <- rep(0,length(gene_short_name))
@@ -27,8 +25,6 @@ l2$d_4 <- rep(0,length(gene_short_name))
 l2$d_5 <- rep(0,length(gene_short_name))
 l2$d_6 <- rep(0,length(gene_short_name))
 l2$d_7 <- rep(0,length(gene_short_name))
-l2$d_8 <- rep(0,length(gene_short_name))
-l2$d_9 <- rep(0,length(gene_short_name))
 
 for (i in 1:length(gene_short_name)){
   l <- list()
@@ -45,8 +41,6 @@ for (i in 1:length(gene_short_name)){
   l2$p_5[i] <- tk$s[4,4]
   l2$p_6[i] <- tk$s[5,4]
   l2$p_7[i] <- tk$s[6,4]
-  l2$p_8[i] <- tk$s[7,4]
-  l2$p_9[i] <- tk$s[8,4]
   
   l2$d_2[i] <- tk$s[1,1]
   l2$d_3[i] <- tk$s[2,1]
@@ -54,8 +48,6 @@ for (i in 1:length(gene_short_name)){
   l2$d_5[i] <- tk$s[4,1]
   l2$d_6[i] <- tk$s[5,1]
   l2$d_7[i] <- tk$s[6,1]
-  l2$d_8[i] <- tk$s[7,1]
-  l2$d_9[i] <- tk$s[8,1]
 }
 
 #save the data
@@ -71,8 +63,8 @@ dfb1$state <- sapply(dfb1$state,function(x) strsplit(x,'d_')[[1]][2])
 
 df3 <- dplyr::left_join(dfa1,dfb1)
 
-write.csv(df3,file='female_DEanova_statsALLGENES.csv',quote=F,row.names=F)
-file <- synapser::File(path='female_DEanova_statsALLGENES.csv', parentId='syn38349639')
+write.csv(df3,file='data_objects/female_DEanova_statsALLGENES.csv',quote=F,row.names=F)
+file <- synapser::File(path='data_objects/female_DEanova_statsALLGENES.csv', parentId='syn38349639')
 file <- synapser::synStore(file)
 
 
@@ -80,12 +72,11 @@ file <- synapser::synStore(file)
 
 
 #run Male monocle object with script below:
-MonRun <- readRDS(file="~/prot-lineage/data_objects/MonRun_male.RDS")
-temp <- readRDS(file="~/prot-lineage/data_objects/Male_fulldatamatrix.RDS")
+MonRun <- readRDS(file="data_objects/MonRun_RNAseq_male.RDS")
+temp <- readRDS(file="data_objects/Male_fulldatamatrix.RDS")
 gene_short_name <- rownames(temp)
 table(MonRun$State2)
-MonRun$State2<-as.character(MonRun$State2)
-MonRun$State2<-as.factor(MonRun$State2)
+
 #for males there are 6 states
 #pre-process data for ANOVA test
 l2 <- list()
