@@ -11,6 +11,7 @@ library(fgsea)
 library(tidyverse)
 
 
+
 # plotting theme
 theme_set(theme_bw())
 
@@ -82,7 +83,7 @@ enr <- enr %>%
 
 # plot! -------------------------------------------------------------------
 
-#tiff(file='FEMALE_bidomains.tiff',height=200,width=200,units='mm',res=300)
+#tiff(file='FEMALE_biodomains.tiff',height=200,width=200,units='mm',res=300)
 tiff(file='MALE_biodomains.tiff',height=200,width=200,units='mm',res=300)
 
 enr %>%   
@@ -118,23 +119,35 @@ enr %>%
 dev.off()
 
 
-
 enr$leadingEdge <- as.character(enr$leadingEdge)
+enr <- as.data.frame(enr)
+enr2 <- subset(enr, enr$padj<0.1)
+#move leadingEdge column to end of dataframe
+leadingEdge <- as.data.frame(enr2$leadingEdge)
+enr3 <- subset(enr2, select = -c(leadingEdge))
+enr3 <- cbind(enr3, leadingEdge)
 
-write.csv(enr, file="F_GOenrichment.csv", row.names=FALSE)
-file <- synapser::File(path='F_GOenrichment.csv', parentId='syn38349639')
+# enr2$leadingEdge2 <- gsub("\"", "", enr2$leadingEdge)
+# enr2$leadingEdge<-NULL
+# #find extra tabs
+# library(stringr)
+# enr2$leadingEdge <- str_replace(enr2$leadingEdge2, "\",\r\n", "\",") 
+
+
+write.table(enr3, file="data_objects/F_GOenrichment.txt", sep = "\t", row.names=FALSE)
+file <- synapser::File(path='data_objects/F_GOenrichment.txt', parentId='syn38349639')
 file <- synapser::synStore(file)
 
-file <- synapser::File(path='FEMALE_bidomains.tiff', parentId='syn38347670')
+file <- synapser::File(path='FEMALE_biodomains.tiff', parentId='syn38347670')
 file <- synapser::synStore(file)
 
 
 
-write.csv(enr, file="~/prot-lineage/data_objects/M_GOenrichment.csv", row.names=FALSE)
-file <- synapser::File(path='~/prot-lineage/data_objects/M_GOenrichment.csv', parentId='syn38349639')
+write.table(enr3, file="data_objects/M_GOenrichment.txt", sep = "\t", row.names=FALSE)
+file <- synapser::File(path='data_objects/M_GOenrichment.txt', parentId='syn38349639')
 file <- synapser::synStore(file)
 
-file <- synapser::File(path='~/prot-lineage/rnaseq_figures/MALE_biodomains.tiff', parentId='syn38347670')
+file <- synapser::File(path='MALE_biodomains.tiff', parentId='syn38347670')
 file <- synapser::synStore(file)
 
 
