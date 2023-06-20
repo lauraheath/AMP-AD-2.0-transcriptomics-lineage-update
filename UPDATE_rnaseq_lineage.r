@@ -1,4 +1,5 @@
 setwd("~/AMP-AD-2.0-transcriptomics-lineage-update/")
+dir.create("~/AMP-AD-2.0-transcriptomics-lineage-update/data_objects")
 
 ### RERUN TRANSCRIPTOMIC PSEUDOTIME ANALYSIS WITH UPDATED AMP-AD 2.0 DATA. USE RNASEQ HARMONIZATION PROJECT COUNTS AND DE GENES
 
@@ -111,7 +112,7 @@ RMclin <- synapser::synGet('syn3191087')
 RMclin <- read.csv(RMclin$path,stringsAsFactors = F)
 RMclin <- subset(RMclin, select=c(individualID, projid))
 metadata3 <- dplyr::left_join(metadata3, RMclin)
-metadata3 <- metadata3 %>% relocate(projid, .before = specimenID)
+metadata3 <- metadata3 %>% dplyr::relocate(projid, .before = specimenID)
 
 #load differential expression results (AD case vs control, by sex and tissue)
 de_file <- synapser::synGet('syn26967458')
@@ -127,7 +128,7 @@ genekey <- subset(de_female, select=c(ensembl_gene_id, hgnc_symbol))
 names(genekey)[names(genekey) == 'ensembl_gene_id'] <- 'feature'
 Dat2 <- dplyr::left_join(Dat, genekey)
 Dat2 <- Dat2 %>%
-  relocate(hgnc_symbol)
+  dplyr::relocate(hgnc_symbol)
 Dat2 <- as.data.frame(Dat2)
 rownames(Dat2) <- Dat2$hgnc_symbol
 
@@ -144,7 +145,7 @@ Names <- colnames(Dat2)
 cNames <- metadata3$specimenID
 l <- length(Names)
 
-#deleting columns not in the covariate list
+#deleting columns not in metadata
 temp <- rep(T,l)
 for (i in 1:l){
   if (!(Names[i] %in% cNames)){
@@ -154,24 +155,9 @@ for (i in 1:l){
 
 In <- which(temp)
 #print(temp)
-Dat3 <- Dat2[,In]
-
-# #deleting extra rows in covariate list
-# Names <- Names[In]
-# l <- length(cNames)
-# temp <- rep(T,l)
-# for (i in 1:l){
-#   if (!(cNames[i] %in% Names)){
-#     temp[i] <- F
-#   }
-# }
-# In <- which(temp)
-# metadata4 <- metadata3[In,]
+DatNorm <- Dat2[,In]
 
 
-
-#DatNorm <- ColNorm(Dat3)
-DatNorm <- Dat3
 
 #Limit rnaseq matrix by DE genes, by sex
 GeneNames <- Dat2$hgnc_symbol
@@ -222,6 +208,7 @@ rnaseq_genesF <- as.data.frame(gene_short_name)
 write.csv(rnaseq_genesF, file="data_objects/rnaseq_genesF.csv", row.names=FALSE)
 
 
+temp <- as.data.frame(temp)
 
 #Run Monocle2: (ignore warning messages that occur)
 #male rnaseq dataset needs to be run with order Reversed (HSMM <- orderCells(HSMM, reverse=TRUE)
